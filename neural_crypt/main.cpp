@@ -24,7 +24,6 @@ int main()
 {
     // 1) Singleton with instance ptr crypt
     test::get().secret_function();
-
     // 1.1) Check that instance is the same
     test::get().secret_function();
 
@@ -36,7 +35,7 @@ int main()
     std::cout << "Crypted value address:   0x" << crypted_value.raw() << std::endl;
     std::cout << "Decrypted value address: 0x" << crypted_value.decrypt() << std::endl;
 
-    // 3) Speed test
+    // 3) Preformance test
     std::cout << std::endl;
     auto start_time1 = std::chrono::steady_clock::now();
     {

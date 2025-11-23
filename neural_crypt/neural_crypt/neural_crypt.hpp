@@ -15,24 +15,21 @@
 #define C_FORCEINLINE inline
 #endif
 
-constexpr uint64_t fnv1a_hash(const char* str, uint64_t hash = 14695981039346656037ULL) 
+constexpr uint64_t fnv1a_hash(const char* str, uint64_t hash = 14695981039346656037ULL)
 {
     return (*str == '\0') ? hash : fnv1a_hash(str + 1, (hash ^ static_cast<uint64_t>(*str)) * 1099511628211ULL);
 }
 
+#define ROUNDS 16       // rounds 8 (for speed) or 16 (for more complexity)
+#define INPUT_DIM 96    // 32 data + 64 key
+#define HIDDEN_DIM 64
+#define OUTPUT_DIM 32
+#define GEN_CT_KEY (fnv1a_hash(__TIME__) ^ fnv1a_hash(__FILE__) ^ ((uint64_t)__LINE__ * (uint64_t)__COUNTER__))
+
 namespace neural_crypto 
 {
-    #define ROUNDS 16       // rounds 8 (for speed) or 16 (for more complexity)
-    #define INPUT_DIM 96    // 32 data + 64 key
-    #define HIDDEN_DIM 64
-    #define OUTPUT_DIM 32
-
-    #define GENERATE_CT_KEY (fnv1a_hash(__TIME__) ^ fnv1a_hash(__FILE__) ^ ((uint64_t)__LINE__ * (uint64_t)__COUNTER__))
-
-    C_FORCEINLINE float relu(float x) { return (x > 0.0f) ? x : 0.0f; }
-
     // Forward Pass
-    C_FORCEINLINE uint32_t neural_f(uint32_t right_part, uint64_t round_key)
+    C_FORCEINLINE auto neural_f(uint32_t right_part, uint64_t round_key) -> uint32_t
     {
         float input[INPUT_DIM];
 
@@ -55,7 +52,7 @@ namespace neural_crypto
             {
                 sum += input[j] * w_ptr[j];
             }
-            hidden[i] = relu(sum);
+            hidden[i] = (sum > 0.0f ? (sum) : 0.0f); // ReLU
         }
 
         // Layer 2 + Binarization
@@ -75,7 +72,7 @@ namespace neural_crypto
     }
 
     // Feistel Web (Crypt/Decrypt)
-    C_FORCEINLINE uint64_t process(uint64_t val, uint64_t key, bool encrypt)
+    C_FORCEINLINE auto process(uint64_t val, uint64_t key, bool encrypt) -> uint64_t
     {
         uint32_t L = (val >> 32) & 0xFFFFFFFF;
         uint32_t R = val & 0xFFFFFFFF;
@@ -83,10 +80,10 @@ namespace neural_crypto
 
         for (int i = 0; i < ROUNDS; ++i)
         {
+            // Key Schedule: circular shift
             int round_idx = encrypt ? i : (ROUNDS - 1 - i);
-
-			// Key Schedule: circular shift
-            uint64_t round_key = (key << round_idx) | (key >> (64 - round_idx));
+            uint64_t step_key = key ^ round_idx;
+            uint64_t round_key = (step_key << round_idx) | (step_key >> (64 - round_idx));
 
             uint32_t f_out = neural_f(R, round_key);
             uint32_t temp = R;
@@ -99,7 +96,7 @@ namespace neural_crypto
 
     // Shit fix (protect from delete by optimization)
     template <typename T>
-    inline T* force_memory(T* ptr) 
+    C_FORCEINLINE T* force_memory(T* ptr) 
     {
 #if defined(__GNUC__) || defined(__clang__)
         asm volatile("" : : "r,m"(ptr) : "memory");
@@ -123,8 +120,7 @@ public:
     // Constructor: accepts a raw pointer and encrypts it
     C_FORCEINLINE neural_ptr_crypt(T* ptr)
     {
-        uint64_t raw = reinterpret_cast<uint64_t>(ptr);
-        encrypted_val = neural_crypto::process(raw, Key, true);
+        encrypted_val = neural_crypto::process(reinterpret_cast<uint64_t>(ptr), Key, true);
     }
 
     // The value retrieval operator
@@ -144,6 +140,6 @@ public:
     T& operator*() const { return *decrypt(); }
 };
 
-#define CRYPT_PTR(ptr) neural_ptr_crypt<typename std::remove_pointer<decltype(ptr)>::type, GENERATE_CT_KEY>(neural_crypto::force_memory(ptr))
+#define CRYPT_PTR(ptr) neural_ptr_crypt<typename std::remove_pointer<decltype(ptr)>::type, GEN_CT_KEY>(neural_crypto::force_memory(ptr))
 
 #endif // NEURAL_OBFUSCATOR_HPP
