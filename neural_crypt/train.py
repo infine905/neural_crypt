@@ -40,7 +40,7 @@ print("NeuralNet Initialized. Generating C++ header...")
 # 3. Export weights to hpp file
 def export_tensor_to_cpp(name, tensor):
     data = tensor.detach().numpy().flatten()
-    cpp_str = f"\tconstexpr inline float {name}[{len(data)}] = {{\n\t\t"
+    cpp_str = f"\tstatic const float {name}[{len(data)}] = {{\n\t\t"
     for i, val in enumerate(data):
         cpp_str += f"{val:.6f}f, "
         if (i + 1) % 8 == 0:
