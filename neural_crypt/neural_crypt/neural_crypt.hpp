@@ -1,10 +1,6 @@
 #ifndef NEURAL_OBFUSCATOR_HPP
 #define NEURAL_OBFUSCATOR_HPP
 
-#include <array>
-#include <cmath>
-#include <cstdint>
-
 #include "weights.h"
 
 #if defined(_MSC_VER)
@@ -94,7 +90,7 @@ namespace neural_crypto
         return ((uint64_t)R << 32) | L;
     }
 
-    // Shit fix (protect from delete by optimization)
+    // Shit fix (protect from delete by optimization) i fuck MSVC
     template <typename T>
     C_FORCEINLINE T* force_memory(T* ptr) 
     {
