@@ -2,6 +2,10 @@
 ![C++](https://img.shields.io/badge/Language-C++17-blue.svg)
 ![Status](https://img.shields.io/badge/Status-Experimental-orange.svg)
 
+> [!WARNING]
+> ### This is just PoC
+> #### don't use this in production
+
 **NeuralCrypt** — это экспериментальная header-only C++ библиотека для **обфускации указателей**. 
 
 Она использует архитектуру **сети Фейстеля (Feistel Cipher)**, ядром которой является полносвязная **нейронная сеть**. Ключи шифрования генерируются на этапе компиляции (`Compile-Time`).
