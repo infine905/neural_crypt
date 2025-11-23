@@ -1,5 +1,5 @@
 # 🧠 NeuralCrypt
-![C++](https://img.shields.io/badge/Language-C++17-blue.svg)
+![C++](https://img.shields.io/badge/Language-C++20-blue.svg)
 ![Status](https://img.shields.io/badge/Status-Experimental-orange.svg)
 
 > [!WARNING]
