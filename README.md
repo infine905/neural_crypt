@@ -40,3 +40,4 @@ int main() {
     return 0;
 }
 ```
+За идею и вдохновение спасибо: https://github.com/sapdragon/ai-obfuscator
